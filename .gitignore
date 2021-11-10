@@ -1,0 +1,15 @@
+*.swp
+package-lock.json
+__pycache__
+.pytest_cache
+.env
+.venv
+*.egg-info
+node_modules
+package.json
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+jerome_TODO.md
+response.json
