@@ -1,22 +1,35 @@
 # Retrieve Accounts info from an Organization Unit
 
-Educational code sample on how to retrieve all AWS accounts-id below an `Organization Unit (OU)`.
-
-This example CDK project contains two stacks:
-- On the Organization managment (root) account: create `IAM Role` to invoke relevant `AWS Organization` API
-- On the reporting account: `AWS Lambda Function` to query and log the account info.
-
+This is an educational code sample.  
 Latest code version is available at: [https://github.com/aws-samples/retrieve-accounts-from-organization-unit](https://github.com/aws-samples/retrieve-accounts-from-organization-unit)
 
-## Architecture diagram
+## Scenario
+
+In our company all the `AWS Accounts` belong to an `AWS Organization` managed by "Central-IT" sysop team.  
+We are managing a business department which has an `AWS Organization Unit` containing all our member `AWS Accounts`.  
+We want to get the list and details of the `AWS Accounts` of our `Organization Unit`.
+
+We can use the `AWS Organization` API [ListAccountsForParent](https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListAccountsForParent.html).  
+But, this API can be invoked only from the organization's [management account](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_getting-started_concepts.html) or by a member account that is a delegated administrator for an AWS service.  
+Also, for confidentiality reason, we should have access only to resources related to our business department.  
+So, we ask the administrator of the Organization to create a new `Role` in the `management account` with query capability limited to only our `Organization Unit`.  
+
+We can then create a reporting app to query for the information.  
+This app will asssume the created `Role` to be allowed to invoke the API.  
+We will create in this code-sample a simple illustrative `AWS Lambda Function` that log the results in `AWS CloudWatch`.  
+
 
 ![Architecture](architecture.drawio.png)
 
 ## Deploying this solution
 
+This CDK project contains two stacks:
+- One deployed on the Organization managment account: create the `IAM Role` to invoke the `AWS Organization` API
+- One deployed on the reporting account: `AWS Lambda Function` to query and log the account info.
+
 ### Prerequisites
 - AWS CDK installed. Follow the installation guide [here](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html).
-- Principal used for CDK deployment has access to CloudFormation and can create and write to a new S3 Bucket
+- The principal used for CDK deployment has access to `CloudFormation` and can create and write to a new `S3 Bucket`
 - AWS Accounts:
     - An AWS account root of an `AWS Organization` and credentials to deploy on this account. 
     - Few illustrative AWS Accounts below an `Organisation Unit` in the same `AWS Organization`.
@@ -40,7 +53,7 @@ python3 -m venv .venv
 pip install -r requirements.txt
 ```
 
-### 2. Deploy on reporting account
+### 2. Deploy on the reporting account
 
 First [target the account](HOWTO_select_target_account.md) that will query and report the OU accounts info.
 Then deploy the CDK stack:
@@ -52,7 +65,7 @@ cdk deploy ReportingAppStack  \
     --parameters organizationUnitId=<Organization Unit id, ie: ou-abcd-abcde1234>    
 ```
 
-### 3. Deploy on Organization managment account
+### 3. Deploy on the Organization managment account
 
 First [target the `AWS Organization` `managment account`](HOWTO_select_target_account.md). Then deploy the CDK stack:
 
@@ -63,7 +76,7 @@ cdk deploy ManagmentAccountRoleStack \
     --parameters organizationUnitId=<Organization Unit id, ou-abcd-abcde1234>    
 ```
 
-### 4. Invoke Lambda Function and get output
+### 4. Invoke Lambda Function and see output
 
 You can execute the `Lambda function` directly in the `console` and then check the logs in `AWS CLoudWatch Logs`
 
@@ -78,14 +91,13 @@ aws lambda invoke --function-name log-organization-unit-accounts-id response.jso
 finaly display the logs
 ```
 export latestLogStreamName=`aws logs describe-log-streams --log-group-name '/aws/lambda/log-organization-unit-accounts-id' --query logStreams[-1].logStreamName --output text`
-#echo $latestLogStreamName
+echo "log Stream name is: $latestLogStreamName"
 AWS_PAGER="" aws logs get-log-events --log-group-name '/aws/lambda/log-organization-unit-accounts-id' --log-stream-name "$latestLogStreamName"
 ```
 
-
 ### 5. Clean Up
 
-First [Target the `AWS Organization` `managment account`](HOWTO_select_target_account.md). Then:
+First [Target the `AWS Organization managment account`](HOWTO_select_target_account.md). Then:
 
 ```
 cdk destroy managment_account_role
