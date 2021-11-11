@@ -88,7 +88,7 @@ First [target the reporting account](HOWTO_select_target_account.md). Then:
 aws lambda invoke --function-name log-organization-unit-accounts-id response.json
 ```
 
-finaly display the logs
+finally display the logs
 ```
 export latestLogStreamName=`aws logs describe-log-streams --log-group-name '/aws/lambda/log-organization-unit-accounts-id' --query logStreams[-1].logStreamName --output text`
 echo "log Stream name is: $latestLogStreamName"
