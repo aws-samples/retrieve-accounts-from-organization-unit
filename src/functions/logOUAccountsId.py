@@ -2,13 +2,16 @@ import boto3
 import logging
 import os
 
+
 def lambda_handler(event, context):
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
-    logging.getLogger("boto3").setLevel(logging.WARNING) # remove INFO log noise
-    logging.getLogger("botocore").setLevel(logging.WARNING) # remove INFO log noise
+    logging.getLogger("boto3").setLevel(
+        logging.WARNING)  # remove lib log noise
+    logging.getLogger("botocore").setLevel(
+        logging.WARNING)  # remove lib log noise
 
-    # assume role from the Organization managment account and extract temporary credential   
+    # assume role from the Organization managment account and extract temporary credential
     sts_connection = boto3.client('sts')
     acct_b = sts_connection.assume_role(
         RoleArn=os.environ['ASSUME_ROLE_ARN'],
@@ -41,7 +44,5 @@ def lambda_handler(event, context):
             logger.info(accountsInfo)
         try:
             marker = page['NextToken']
-            #print(marker)
         except KeyError:
-            #print('This is the last page as the key NextToken is not provided')
             break
